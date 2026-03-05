@@ -2,7 +2,7 @@ class PlayingCardModel {
   final int? id;
   final String cardName;
   final String suit;
-  final String imageUrl; // stores asset path like assets/cards/2_of_clubs.png
+  final String imageUrl;
   final int folderId;
 
   PlayingCardModel({

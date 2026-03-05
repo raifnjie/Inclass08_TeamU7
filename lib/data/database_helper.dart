@@ -50,19 +50,15 @@ class DatabaseHelper {
     await _prepopulate(db);
   }
 
-  // Map suit names to the exact words used in your filenames
-  String _suitWord(String suit) => suit.toLowerCase(); // clubs/hearts/diamonds/spades
+  String _suitWord(String suit) => suit.toLowerCase(); 
 
-  // Build filename based on your naming convention
-  // examples: ace_of_spades.png, 2_of_clubs.png, 10_of_hearts.png, jack_of_diamonds.png
   String _assetPath(String rankName, String suit) {
-    final rank = rankName.toLowerCase(); // ace, 2, 3, ..., 10, jack, queen, king
+    final rank = rankName.toLowerCase(); 
     final s = _suitWord(suit);
     return 'assets/cards/${rank}_of_${s}.png';
   }
 
   Future<void> _prepopulate(Database db) async {
-    // Choose 2, 3, or 4 suits (assignment: 2-4). :contentReference[oaicite:1]{index=1}
     const int suitsToUse = 4;
 
     final allSuits = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];

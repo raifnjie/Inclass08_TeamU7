@@ -55,7 +55,7 @@ class _AddEditCardScreenState extends State<AddEditCardScreen> {
         id: widget.card?.id,
         cardName: _cardNameController.text.trim(),
         suit: _selectedSuit,
-        imageUrl: _imagePathController.text.trim(), // expects assets/cards/...
+        imageUrl: _imagePathController.text.trim(),
         folderId: widget.folderId,
       );
 

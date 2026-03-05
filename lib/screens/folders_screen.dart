@@ -34,11 +34,11 @@ class _FoldersScreenState extends State<FoldersScreen> {
             case 'hearts':
             return Icons.favorite;
             case 'diamonds':
-            return Icons.diamond_outlined; // supported
+            return Icons.diamond_outlined; 
             case 'clubs':
-            return Icons.local_florist; // supported substitute
+            return Icons.local_florist; 
             case 'spades':
-            return Icons.spa; // supported
+            return Icons.spa; 
             default:
             return Icons.folder;
         }
