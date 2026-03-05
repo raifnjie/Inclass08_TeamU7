@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../models/folder_model.dart';
 import '../repositories/folder_repository.dart';
 import 'cards_screen.dart';
@@ -14,7 +13,6 @@ class FoldersScreen extends StatefulWidget {
 
 class _FoldersScreenState extends State<FoldersScreen> {
   final FolderRepository _folderRepo = FolderRepository();
-
   late Future<List<Map<String, dynamic>>> _foldersFuture;
 
   @override
@@ -28,16 +26,29 @@ class _FoldersScreenState extends State<FoldersScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _loadFolders();
-    });
+    setState(() => _loadFolders());
   }
+
+  IconData _suitIcon(String suit) {
+    switch (suit.toLowerCase()) {
+            case 'hearts':
+            return Icons.favorite;
+            case 'diamonds':
+            return Icons.diamond_outlined; // supported
+            case 'clubs':
+            return Icons.local_florist; // supported substitute
+            case 'spades':
+            return Icons.spa; // supported
+            default:
+            return Icons.folder;
+        }
+    }
 
   Future<void> _renameFolder(Map<String, dynamic> folder) async {
     final controller = TextEditingController(text: folder['folder_name']);
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Rename Folder'),
@@ -46,24 +57,14 @@ class _FoldersScreenState extends State<FoldersScreen> {
           child: TextFormField(
             controller: controller,
             decoration: const InputDecoration(labelText: 'Folder Name'),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Enter a folder name';
-              }
-              return null;
-            },
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter a name' : null,
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(context, true);
-              }
+              if (formKey.currentState!.validate()) Navigator.pop(context, true);
             },
             child: const Text('Save'),
           ),
@@ -71,115 +72,66 @@ class _FoldersScreenState extends State<FoldersScreen> {
       ),
     );
 
-    if (result == true) {
+    if (ok == true) {
       try {
-        final updated = FolderModel(
-          id: folder['id'] as int,
-          folderName: controller.text.trim(),
-          timestamp: folder['timestamp'] as String,
+        await _folderRepo.updateFolder(
+          FolderModel(
+            id: folder['id'] as int,
+            folderName: controller.text.trim(),
+            timestamp: folder['timestamp'] as String,
+          ),
         );
-        await _folderRepo.updateFolder(updated);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Folder renamed')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Folder renamed')));
         _refresh();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rename failed: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Rename failed: $e')));
       }
     }
   }
 
   Future<void> _deleteFolder(Map<String, dynamic> folder) async {
-    final confirm = await showDialog<bool>(
+    final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('Delete Folder?'),
-        content: Text(
-          'Delete "${folder['folder_name']}" and all cards inside it?\n\n'
-          'This uses cascade deletion and cannot be undone.',
-        ),
+        content: Text('Delete "${folder['folder_name']}" and ALL cards inside?\n\nThis uses CASCADE deletion.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
         ],
       ),
     );
 
-    if (confirm == true) {
+    if (ok == true) {
       try {
         await _folderRepo.deleteFolder(folder['id'] as int);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Folder deleted')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Folder deleted')));
         _refresh();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
       }
-    }
-  }
-
-  IconData _suitIcon(String suit) {
-    switch (suit.toLowerCase()) {
-      case 'hearts':
-        return Icons.favorite;
-      case 'diamonds':
-        return Icons.diamond;
-      case 'clubs':
-        return Icons.clubs;
-      case 'spades':
-        return Icons.spa;
-      default:
-        return Icons.folder;
-    }
-  }
-
-  Color _suitColor(String suit, BuildContext context) {
-    switch (suit.toLowerCase()) {
-      case 'hearts':
-      case 'diamonds':
-        return Colors.red;
-      default:
-        return Theme.of(context).colorScheme.primary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Card Organizer - Folders'),
-      ),
+      appBar: AppBar(title: const Text('Card Organizer - Folders')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _foldersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          final folders = snapshot.data ?? [];
-
-          if (folders.isEmpty) {
-            return const Center(child: Text('No folders found.'));
-          }
+          final folders = snap.data ?? [];
+          if (folders.isEmpty) return const Center(child: Text('No folders found.'));
 
           return RefreshIndicator(
             onRefresh: _refresh,
@@ -192,11 +144,11 @@ class _FoldersScreenState extends State<FoldersScreen> {
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.15,
               ),
-              itemBuilder: (context, index) {
-                final folder = folders[index];
-                final folderName = folder['folder_name'] as String;
-                final cardCount = folder['card_count'] as int? ?? 0;
-                final timestamp = folder['timestamp'] as String;
+              itemBuilder: (context, i) {
+                final f = folders[i];
+                final name = f['folder_name'] as String;
+                final count = (f['card_count'] as int?) ?? 0;
+                final ts = f['timestamp'] as String;
 
                 return Card(
                   child: InkWell(
@@ -206,8 +158,8 @@ class _FoldersScreenState extends State<FoldersScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => CardsScreen(
-                            folderId: folder['id'] as int,
-                            folderName: folderName,
+                            folderId: f['id'] as int,
+                            folderName: name,
                           ),
                         ),
                       );
@@ -220,47 +172,30 @@ class _FoldersScreenState extends State<FoldersScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(
-                                _suitIcon(folderName),
-                                color: _suitColor(folderName, context),
-                              ),
+                              Icon(_suitIcon(name)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  folderName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                                  name,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Text('Cards: $cardCount'),
+                          Text('Cards: $count'),
                           const Spacer(),
                           Text(
-                            DateFormat('MM/dd/yyyy').format(DateTime.parse(timestamp)),
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
+                            DateFormat('MM/dd/yyyy').format(DateTime.parse(ts)),
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                           ),
                           const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              IconButton(
-                                onPressed: () => _renameFolder(folder),
-                                icon: const Icon(Icons.edit),
-                                tooltip: 'Rename',
-                              ),
-                              IconButton(
-                                onPressed: () => _deleteFolder(folder),
-                                icon: const Icon(Icons.delete),
-                                tooltip: 'Delete',
-                              ),
+                              IconButton(icon: const Icon(Icons.edit), onPressed: () => _renameFolder(f)),
+                              IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteFolder(f)),
                             ],
                           ),
                         ],

@@ -24,16 +24,4 @@ class FolderModel {
       timestamp: map['timestamp'],
     );
   }
-
-  FolderModel copyWith({
-    int? id,
-    String? folderName,
-    String? timestamp,
-  }) {
-    return FolderModel(
-      id: id ?? this.id,
-      folderName: folderName ?? this.folderName,
-      timestamp: timestamp ?? this.timestamp,
-    );
-  }
 }

@@ -9,7 +9,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('card_organizer.db');
+    _database = await _initDB('card_organizer_local_assets.db');
     return _database!;
   }
 
@@ -50,35 +50,39 @@ class DatabaseHelper {
     await _prepopulate(db);
   }
 
+  // Map suit names to the exact words used in your filenames
+  String _suitWord(String suit) => suit.toLowerCase(); // clubs/hearts/diamonds/spades
+
+  // Build filename based on your naming convention
+  // examples: ace_of_spades.png, 2_of_clubs.png, 10_of_hearts.png, jack_of_diamonds.png
+  String _assetPath(String rankName, String suit) {
+    final rank = rankName.toLowerCase(); // ace, 2, 3, ..., 10, jack, queen, king
+    final s = _suitWord(suit);
+    return 'assets/cards/${rank}_of_${s}.png';
+  }
+
   Future<void> _prepopulate(Database db) async {
-    // Change this number to 2, 3, or 4 if your instructor wants a specific amount.
+    // Choose 2, 3, or 4 suits (assignment: 2-4). :contentReference[oaicite:1]{index=1}
     const int suitsToUse = 4;
 
     final allSuits = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
     final selectedSuits = allSuits.take(suitsToUse).toList();
 
-    final ranks = <Map<String, String>>[
-      {'name': 'Ace', 'code': 'A'},
-      {'name': '2', 'code': '2'},
-      {'name': '3', 'code': '3'},
-      {'name': '4', 'code': '4'},
-      {'name': '5', 'code': '5'},
-      {'name': '6', 'code': '6'},
-      {'name': '7', 'code': '7'},
-      {'name': '8', 'code': '8'},
-      {'name': '9', 'code': '9'},
-      {'name': '10', 'code': '0'}, // Deck of Cards API uses 0 for 10
-      {'name': 'Jack', 'code': 'J'},
-      {'name': 'Queen', 'code': 'Q'},
-      {'name': 'King', 'code': 'K'},
+    final ranks = <String>[
+      'Ace',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'Jack',
+      'Queen',
+      'King',
     ];
-
-    final suitCode = {
-      'Spades': 'S',
-      'Hearts': 'H',
-      'Diamonds': 'D',
-      'Clubs': 'C',
-    };
 
     final now = DateTime.now().toIso8601String();
 
@@ -89,13 +93,12 @@ class DatabaseHelper {
       });
 
       for (final rank in ranks) {
-        final code = '${rank['code']}${suitCode[suit]}';
-        final imageUrl = 'https://deckofcardsapi.com/static/img/$code.png';
+        final asset = _assetPath(rank, suit);
 
         await db.insert('cards', {
-          'card_name': rank['name'],
+          'card_name': rank,
           'suit': suit,
-          'image_url': imageUrl,
+          'image_url': asset,
           'folder_id': folderId,
         });
       }

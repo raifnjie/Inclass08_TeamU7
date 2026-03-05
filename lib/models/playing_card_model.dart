@@ -2,7 +2,7 @@ class PlayingCardModel {
   final int? id;
   final String cardName;
   final String suit;
-  final String imageUrl;
+  final String imageUrl; // stores asset path like assets/cards/2_of_clubs.png
   final int folderId;
 
   PlayingCardModel({
@@ -30,22 +30,6 @@ class PlayingCardModel {
       suit: map['suit'],
       imageUrl: map['image_url'] ?? '',
       folderId: map['folder_id'],
-    );
-  }
-
-  PlayingCardModel copyWith({
-    int? id,
-    String? cardName,
-    String? suit,
-    String? imageUrl,
-    int? folderId,
-  }) {
-    return PlayingCardModel(
-      id: id ?? this.id,
-      cardName: cardName ?? this.cardName,
-      suit: suit ?? this.suit,
-      imageUrl: imageUrl ?? this.imageUrl,
-      folderId: folderId ?? this.folderId,
     );
   }
 }

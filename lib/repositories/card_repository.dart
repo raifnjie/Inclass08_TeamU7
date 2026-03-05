@@ -29,17 +29,18 @@ class CardRepository {
         END
       ''',
     );
+
     return maps.map((m) => PlayingCardModel.fromMap(m)).toList();
   }
 
   Future<int> insertCard(PlayingCardModel card) async {
     final db = await _dbHelper.database;
-    return await db.insert('cards', card.toMap());
+    return db.insert('cards', card.toMap());
   }
 
   Future<int> updateCard(PlayingCardModel card) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    return db.update(
       'cards',
       card.toMap(),
       where: 'id = ?',
@@ -49,10 +50,6 @@ class CardRepository {
 
   Future<int> deleteCard(int id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
-      'cards',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return db.delete('cards', where: 'id = ?', whereArgs: [id]);
   }
 }
